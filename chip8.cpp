@@ -229,6 +229,14 @@ namespace chip8
 
 	void emulator::timers()
 	{
+		
+		hertz60_counter++;
+		if (frequency/60. > hertz60_counter)
+		{
+			hertz60_counter -= frequency/60.;
+			hertz60_clock++;
+		}
+
 		if (delay_timer)
 		{
 			delay_counter++;
@@ -250,11 +258,25 @@ namespace chip8
 			{
 				sound_counter -= frequency/60.;
 				sound_timer--;
+
+				if (!sound_timer)
+				{
+					sound = true;
+					sound_timestamp = hertz60_clock;
+				}
 			}
 		}
 		else if (sound_counter)
 		{
 			sound_counter = 0;
+		}
+
+		if (sound)
+		{
+			if (sound_timestamp + 10 < hertz60_clock)
+			{
+				sound = false;
+			}
 		}
 	}
 

@@ -20,6 +20,9 @@ public:
 	void draw(const bool *aCont);
 	void present();
 
+	void beep();
+	void unbeep();
+
 private:
 	static SDL_controller mInst;
 	SDL_controller();
@@ -28,24 +31,42 @@ private:
 	SDL_controller& operator=(SDL_controller&) = delete;
 	SDL_controller& operator=(SDL_controller&&) = default;
 
+	static void fill_audio(void *udata, Uint8 *stream, int len);
+
 	bool mInit;
 	bool mError;
 
 	SDL_Window *mpWin;
 	SDL_Renderer *mpRen;
+	SDL_AudioSpec mWanted;
+	SDL_AudioDeviceID mDev;
 };
 
 SDL_controller SDL_controller::mInst;
 
+int16_t sound_buffer[1024];
+
 SDL_controller::SDL_controller()
 :mInit(false), mError(false), mpWin(nullptr), mpRen(nullptr)
-{}
+{
+	mWanted.freq = 48000;
+	mWanted.format = AUDIO_S16SYS;
+	mWanted.channels = 1;
+	mWanted.samples = 1024;
+	mWanted.callback = fill_audio;
+	mWanted.userdata = this;
+}
+
+void SDL_controller::fill_audio(void *, Uint8 *stream, int len)
+{
+	memcpy(stream, &sound_buffer, len);	
+}
 
 bool SDL_controller::init()
 {
 	if (!mInit)
 	{
-		if (SDL_Init(SDL_INIT_VIDEO))
+		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 		{
 			mError = true;
 		}
@@ -77,6 +98,25 @@ bool SDL_controller::init()
 		SDL_RenderClear(mpRen);
 		
 		SDL_RenderPresent(mpRen);
+
+		if (!(mDev = SDL_OpenAudioDevice(NULL, 0, &mWanted, NULL, 0)))
+		{
+			printf("SDL_Init failed: %s\n", SDL_GetError());
+			mError = true;
+			mInit = false;
+		}
+
+		for (size_t i = 0; i < sizeof(sound_buffer)/sizeof(*sound_buffer); ++i)
+		{
+			if ( i % (48000/440) < (48000/440/2))
+			{
+				sound_buffer[i] = 28000;
+			}
+			else
+			{
+				sound_buffer[i] = -28000;
+			}
+		}
 	}
 	return !mError;
 }
@@ -103,8 +143,24 @@ void SDL_controller::present()
 	SDL_SetRenderDrawColor(mpRen, 0, 150, 0, 1);
 }
 
+void SDL_controller::beep()
+{	
+	SDL_PauseAudioDevice(mDev, 0);
+}
+
+void SDL_controller::unbeep()
+{
+	SDL_PauseAudioDevice(mDev, 1);
+}
+
 SDL_controller::~SDL_controller()
 {
+
+	if (mDev)
+	{
+		SDL_CloseAudioDevice(mDev);
+	}
+
 	if (mpRen)
 	{
 		SDL_DestroyRenderer(mpRen);
@@ -200,6 +256,16 @@ int main(int argc, char *argv[])
 		emu.run(std::chrono::duration<double, std::milli>(1000./60));
 		
 		sdl.draw(emu.getGfx().data());
+
+		if (emu.getSound())
+		{
+			sdl.beep();
+		}
+		else
+		{
+			sdl.unbeep();
+		}
+
 		std::chrono::duration<double, std::milli> hz60(100./6.);
 		std::this_thread::sleep_until(now + hz60);
 		sdl.present();

@@ -15,9 +15,9 @@ namespace chip8
 	{
 	public:
 		constexpr emulator()
-		:frequency(1000), memory{}, registers{{0},0,0x200}, gfx{0},
+		:frequency(1000), memory{}, registers{{0},0,0x200}, gfx{0}, hertz60_clock{0}, hertz60_counter{0},
 			delay_timer{0}, delay_counter{0}, sound_timer{0},
-			sound_counter{0}, stack{0}, sp{0}, key{0}
+			sound_counter{0}, sound_timestamp{0}, sound{false}, stack{0}, sp{0}, key{0}
 		{};
 		
 		~emulator() = default;
@@ -52,6 +52,11 @@ namespace chip8
 			key[aKey & 0xFF] = 0;
 		}
 
+		bool getSound()
+		{
+			return sound;
+		}
+
 	private:
 
 		unsigned int frequency;
@@ -77,11 +82,16 @@ namespace chip8
 		} registers;
 
 		std::array<bool, 64 * 32> gfx;
-		
+	
+		std::uint64_t hertz60_clock;
+		std::uint64_t hertz60_counter;
+
 		std::uint8_t delay_timer;
 		unsigned int delay_counter;
 		std::uint8_t sound_timer;
 		unsigned int sound_counter;
+		std::uint64_t sound_timestamp;
+		bool sound;
 
 		std::array<memory_t, 16> stack;
 		memory_t sp;
