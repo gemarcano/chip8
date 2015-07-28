@@ -430,12 +430,12 @@ namespace chip8
 
 	void emulator::draw(opcode_t aOp)
 	{
+		registers.V.back() = 0;
 		for (std::uint8_t j = 0; j < (aOp & 0xF); ++j)
 		{
 			size_t pos;
 			bool cur_bit;
 			bool mem_bit;
-			registers.V.back() = 0;
 			for (std::uint8_t i = 0; i < 8; ++i)
 			{
 				pos = (VX + i) % 64 + ((VY + j) % 32)* 64;
