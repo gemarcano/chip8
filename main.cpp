@@ -1,39 +1,35 @@
 #include "chip8.h"
 #include "SDL_controller.h"
 
-
 #include <iostream>
 #include <fstream>
 #include <SDL2/SDL.h>
 #include <thread>
 #include <string>
-
 #include <unordered_map>
 
-#define FREQ 1000
+template <typename T>
+static std::vector<T> generate_sample(int len)
+{       
 
-        template <typename T>
-        std::vector<T> generate_sample(int len)
-        {       
+	std::vector<T> dest(len);
+	const size_t samples = len/sizeof(T);
+	static size_t counter = 0;
+	const size_t frequency = 1000; 
+	const size_t period_in_samples = 48000/frequency;
+	
+	for (size_t i = 0; i < samples; ++i)
+	{       
+		int16_t sign = counter < period_in_samples/2 ? 1 : -1;
+		dest[i] = sign * 28000;
+		if (++counter >= period_in_samples)
+		{       
+			counter -= period_in_samples;
+		}
+	}
 
-		std::vector<T> dest(len);
-                size_t samples = len/sizeof(T);
-                static size_t counter = 0;
-                size_t frequency = 1000; 
-                size_t period_in_samples = 48000/frequency;
-                
-                for (size_t i = 0; i < samples; ++i)
-                {       
-                        int16_t sign = counter < period_in_samples/2 ? 1 : -1;
-                        dest[i] = sign * 28000;
-                        if (++counter >= period_in_samples)
-                        {       
-                                counter -= period_in_samples;
-                        }
-                }
-
-		return dest;
-        }
+	return dest;
+}
 
 int main(int argc, char *argv[])
 {
