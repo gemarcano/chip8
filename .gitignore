@@ -1,2 +1,9 @@
 *.o
 chip8-emulator
+*.in
+aclocal.m4
+configure
+depcomp
+install-sh
+missing
+compile
