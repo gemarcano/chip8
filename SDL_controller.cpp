@@ -29,13 +29,11 @@ namespace chip8
 		mWanted.freq = 48000;
 		mWanted.format = AUDIO_S16SYS;
 		mWanted.channels = 1;
-		mWanted.samples = 2048;
+		mWanted.samples = 1024;
 		mWanted.callback = mSound_Callback;
 		mWanted.userdata = this;
 	}       
 		
-	
-
 	bool SDL_controller::init()
 	{       
 		if (!mInit)
@@ -104,16 +102,6 @@ namespace chip8
 		SDL_RenderClear(mpRen);
 
 		SDL_SetRenderDrawColor(mpRen, 0, 150, 0, 1);
-	}
-
-	void SDL_controller::beep()
-	{       
-		SDL_PauseAudioDevice(mDev, 0);
-	}
-
-	void SDL_controller::unbeep()
-	{
-		SDL_PauseAudioDevice(mDev, 1);
 	}
 
 	SDL_controller::~SDL_controller()

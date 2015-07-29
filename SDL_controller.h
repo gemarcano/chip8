@@ -24,9 +24,6 @@ namespace chip8
 		template<typename Func, class Rep, class Period>
 		void play_sound(Func aFunctor, const std::chrono::duration<Rep, Period>& aTime);
 
-		void beep();
-		void unbeep();
-
 	private:
 		static SDL_controller mInst;
 		SDL_controller();
@@ -44,7 +41,6 @@ namespace chip8
 		SDL_AudioDeviceID mDev;
 		std::function<std::vector<int16_t>(int)> mGenerate_samples;
 		static void mSound_Callback(void * udata, Uint8 *stream, int len);
-		int16_t mSound_buffer[2046];
 		std::chrono::steady_clock::time_point mEnd;
 	};
 
