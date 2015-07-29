@@ -12,6 +12,29 @@
 
 #define FREQ 1000
 
+        template <typename T>
+        std::vector<T> generate_sample(int len)
+        {       
+
+		std::vector<T> dest(len);
+                size_t samples = len/sizeof(T);
+                static size_t counter = 0;
+                size_t frequency = 1000; 
+                size_t period_in_samples = 48000/frequency;
+                
+                for (size_t i = 0; i < samples; ++i)
+                {       
+                        int16_t sign = counter < period_in_samples/2 ? 1 : -1;
+                        dest[i] = sign * 28000;
+                        if (++counter >= period_in_samples)
+                        {       
+                                counter -= period_in_samples;
+                        }
+                }
+
+		return dest;
+        }
+
 int main(int argc, char *argv[])
 {
 	using namespace chip8;
@@ -56,6 +79,7 @@ int main(int argc, char *argv[])
 
 
 	bool terminate = false;
+
 	while (!terminate)
 	{
 		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
@@ -88,11 +112,7 @@ int main(int argc, char *argv[])
 
 		if (emu.getSound())
 		{
-			sdl.beep();
-		}
-		else
-		{
-			sdl.unbeep();
+			sdl.play_sound(generate_sample<int16_t>, 100ms);
 		}
 
 		std::chrono::duration<double, std::milli> hz60(100./6.);

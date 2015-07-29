@@ -7,30 +7,20 @@ namespace chip8
 {
 	SDL_controller SDL_controller::mInst;
 
-	template <typename T, size_t Size>
-	void generate_sample(std::array<T,Size>& dest, size_t len)
+	void SDL_controller::mSound_Callback(void *udata, Uint8 *stream, int len)
 	{
-		size_t samples = len/sizeof(T);
-		static size_t counter = 0;
-		size_t frequency = 1000;
-		size_t period_in_samples = 48000/frequency;
-
-		for (size_t i = 0; i < samples; ++i)
+		SDL_controller &c = *reinterpret_cast<SDL_controller*>(udata);
+		
+		std::vector<int16_t> buffer(len);
+		if (c.mGenerate_samples)
 		{
-			int16_t sign = counter < period_in_samples/2 ? 1 : -1;
-			dest[i] = sign * 28000;
-			if (++counter >= period_in_samples)
-			{
-				counter -= period_in_samples;
-			}
+			buffer = c.mGenerate_samples(len);
 		}
-	}
-
-	void fill_audio(void *, Uint8 *stream, int len)
-	{               
-		std::array<int16_t, 2048> s_buffer;
-		generate_sample(s_buffer, len);
-		memcpy(stream, s_buffer.data(), len);
+		memcpy(stream, buffer.data(), len);
+		if (c.mEnd < std::chrono::steady_clock::now())
+		{
+			SDL_PauseAudioDevice(c.mDev, 1);
+		}
 	}       
 		
 	SDL_controller::SDL_controller()
@@ -40,7 +30,7 @@ namespace chip8
 		mWanted.format = AUDIO_S16SYS;
 		mWanted.channels = 1;
 		mWanted.samples = 2048;
-		mWanted.callback = fill_audio;
+		mWanted.callback = mSound_Callback;
 		mWanted.userdata = this;
 	}       
 		
